@@ -1,7 +1,7 @@
 <#
-."C:\Temp\d365fo.tools\_teaching-scripts_\01.01 Add-D365AzureStorageConfig.ps1"
+."C:\Temp\d365fo.tools\_teaching-scripts_\01.00 Add-D365AzureStorageConfig.ps1"
 #>
-$fileName = "01.01 Add-D365AzureStorageConfig.txt"
+$fileName = "01.00 Add-D365AzureStorageConfig.txt"
 
 cd \
 Import-Module C:\Temp\PS\PSTeachingTools -Force

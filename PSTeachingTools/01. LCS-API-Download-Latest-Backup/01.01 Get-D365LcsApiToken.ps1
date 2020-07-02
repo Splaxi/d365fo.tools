@@ -1,7 +1,7 @@
 <#
-."C:\Temp\d365fo.tools\_teaching-scripts_\01.00 Get-D365LcsApiToken.ps1"
+."C:\Temp\d365fo.tools\_teaching-scripts_\01.01 Get-D365LcsApiToken.ps1"
 #>
-$fileName = "01.00 Get-D365LcsApiToken.txt"
+$fileName = "01.01 Get-D365LcsApiToken.txt"
 
 cd \
 Import-Module C:\Temp\PS\PSTeachingTools -Force

@@ -10,4 +10,5 @@ Get-D365LcsDatabaseBackups
 
 #A simple test - let's see if we have any backups available?
 Get-D365LcsDatabaseBackups -Latest
+
 Bye þ
