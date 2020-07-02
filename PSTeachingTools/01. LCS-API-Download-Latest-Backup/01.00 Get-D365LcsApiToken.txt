@@ -1,0 +1,13 @@
+﻿# þ is the pause character
+#We need to get the first OAuth token, to make sure our details are correct.
+Get-D365LcsApiToken þ-ClientId "e70cac82-6a7c-4f9e-a8b9-e707b961e986" þ-Username "Lcs-Automation@contoso.com" þ-Password "fT1DHcLdeTWC9aumugHr" þ-LcsApiUri "https://lcsapi.lcs.dynamics.com"
+
+#If that doesn't fail, we need to persist the details, to make the next calls easier
+Get-D365LcsApiToken -ClientId "e70cac82-6a7c-4f9e-a8b9-e707b961e986" -Username "Lcs-Automation@contoso.com" -Password "fT1DHcLdeTWC9aumugHr" -LcsApiUri "https://lcsapi.lcs.dynamics.com" | Set-D365LcsApiConfig þ-ProjectId "123456789" þ-ClientId "e70cac82-6a7c-4f9e-a8b9-e707b961e986"
+
+#A simple test - let's see if we have any backups available?
+Get-D365LcsDatabaseBackups
+
+#A simple test - let's see if we have any backups available?
+Get-D365LcsDatabaseBackups -Latest
+Bye þ

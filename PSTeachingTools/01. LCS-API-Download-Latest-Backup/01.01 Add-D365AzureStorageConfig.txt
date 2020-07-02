@@ -1,0 +1,14 @@
+﻿# þ is the pause character
+#We need to configure an Azure Storage Account
+Add-D365AzureStorageConfig -Name "TestAccount" -AccountId "motz" -Container "demo" -SAS "?sv=2018-03-28&si=full&sr=c&sig=N3vCp95UUhlpdBxL5QZCjOrp0o30Yxdj17PJ70nxMc4%3D"
+
+#Let's see the details we just saved
+Get-D365AzureStorageConfig
+
+#We are going to set the config as the active
+Set-D365ActiveAzureStorageConfig -Name "TestAccount"
+
+#Do we have anything in it already?
+Get-D365AzureStorageFile
+
+Bye þ

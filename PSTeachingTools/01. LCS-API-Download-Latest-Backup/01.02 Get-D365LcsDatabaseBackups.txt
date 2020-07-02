@@ -1,0 +1,18 @@
+﻿# þ is the pause character
+#Remember that we have an Azure Storage Account configuration?
+Get-D365AzureStorageUrl
+
+#Let's us connect the dots and utilize the Azure Storage Account to speed up the download
+$TempDestination = Get-D365AzureStorageUrl -OutputAsHashtable
+$BlobParms = Get-D365LcsDatabaseBackups -Latest | Invoke-D365AzCopyTransfer @TempDestination -FileName "Latest.bacpac"
+
+#Did we really get a new file into our own storage account?
+Get-D365AzureStorageFile
+
+#Let's make the final download and remember to remove the temporary file in the storage account
+$BlobParms | Invoke-D365AzCopyTransfer -DestinationUri "C:\Temp" -DeleteOnTransferComplete
+
+#Nothing to see here...
+Get-D365AzureStorageFile
+
+Bye þ
