@@ -1,0 +1,213 @@
+# Build and release the d365fo.tools PowerShell module on every push to master.
+# Validation jobs run in parallel with module caching; build-and-release runs after all pass.
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      skippublish:
+        description: "Determines if the publishing to the PowerShell Gallery is skipped"
+        default: $True
+        required: false
+        type: choice
+        options:
+          - $False
+          - $True
+      skipghrelease:
+        description: "Determines if creation of a GitHub release is skipped"
+        default: false
+        required: false
+        type: boolean
+      skipValidation:
+        description: "Determines if the module validation is skipped"
+        default: false
+        required: false
+        type: boolean
+
+jobs:
+  general-unit-tests:
+    name: Validate General Unit Tests
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skipValidation }}
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Cache Powershell Modules
+      id: cache-powershell-modules
+      uses: actions/cache@v5
+      with:
+        path: ~\Documents\WindowsPowerShell\Modules
+        key: ps-modules-${{ runner.os }}-v1
+
+    - name: Install Prerequisites
+      if: steps.cache-powershell-modules.outputs.cache-hit != 'true'
+      shell: powershell
+      run: |
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+        Write-Host "Installing Pester (maximum 4.99.99)..."
+        Install-Module Pester -MaximumVersion 4.99.99 -Scope CurrentUser -Force -SkipPublisherCheck
+        $modules = @('PSFramework','PSScriptAnalyzer','Az.Storage','PSOAuthHelper','ImportExcel')
+        foreach ($module in $modules) {
+          Write-Host "Installing $module..."
+          Install-Module -Name $module -Scope CurrentUser -Force -SkipPublisherCheck
+        }
+
+    - name: Validate
+      shell: powershell
+      run: build\vsts-validate.ps1 -TestGeneral $true -TestFunctions $false -Exclude "PSScriptAnalyzer.Tests.ps1"
+
+  public-functions-unit-tests:
+    name: Validate Public Functions using PSScriptAnalyzer Unit Tests
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skipValidation }}
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Cache Powershell Modules
+      id: cache-powershell-modules
+      uses: actions/cache@v5
+      with:
+        path: ~\Documents\WindowsPowerShell\Modules
+        key: ps-modules-${{ runner.os }}-v1
+
+    - name: Install Prerequisites
+      if: steps.cache-powershell-modules.outputs.cache-hit != 'true'
+      shell: powershell
+      run: |
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+        Write-Host "Installing Pester (maximum 4.99.99)..."
+        Install-Module Pester -MaximumVersion 4.99.99 -Scope CurrentUser -Force -SkipPublisherCheck
+        $modules = @('PSFramework','PSScriptAnalyzer','Az.Storage','PSOAuthHelper','ImportExcel')
+        foreach ($module in $modules) {
+          Write-Host "Installing $module..."
+          Install-Module -Name $module -Scope CurrentUser -Force -SkipPublisherCheck
+        }
+
+    - name: Validate
+      shell: powershell
+      run: build\vsts-validate-psscriptanalyzer.ps1 -TestPublic $true -TestInternal $false
+
+  internal-functions-unit-tests:
+    name: Validate Internal Functions using PSScriptAnalyzer Unit Tests
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skipValidation }}
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Cache Powershell Modules
+      id: cache-powershell-modules
+      uses: actions/cache@v5
+      with:
+        path: ~\Documents\WindowsPowerShell\Modules
+        key: ps-modules-${{ runner.os }}-v1
+
+    - name: Install Prerequisites
+      if: steps.cache-powershell-modules.outputs.cache-hit != 'true'
+      shell: powershell
+      run: |
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+        Write-Host "Installing Pester (maximum 4.99.99)..."
+        Install-Module Pester -MaximumVersion 4.99.99 -Scope CurrentUser -Force -SkipPublisherCheck
+        $modules = @('PSFramework','PSScriptAnalyzer','Az.Storage','PSOAuthHelper','ImportExcel')
+        foreach ($module in $modules) {
+          Write-Host "Installing $module..."
+          Install-Module -Name $module -Scope CurrentUser -Force -SkipPublisherCheck
+        }
+
+    - name: Validate
+      shell: powershell
+      run: build\vsts-validate-psscriptanalyzer.ps1 -TestPublic $false -TestInternal $true
+
+  individual-unit-tests:
+    name: Validate Individual Unit Tests
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skipValidation }}
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Cache Powershell Modules
+      id: cache-powershell-modules
+      uses: actions/cache@v5
+      with:
+        path: ~\Documents\WindowsPowerShell\Modules
+        key: ps-modules-${{ runner.os }}-v1
+
+    - name: Install Prerequisites
+      if: steps.cache-powershell-modules.outputs.cache-hit != 'true'
+      shell: powershell
+      run: |
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+        Write-Host "Installing Pester (maximum 4.99.99)..."
+        Install-Module Pester -MaximumVersion 4.99.99 -Scope CurrentUser -Force -SkipPublisherCheck
+        $modules = @('PSFramework','PSScriptAnalyzer','Az.Storage','PSOAuthHelper','ImportExcel')
+        foreach ($module in $modules) {
+          Write-Host "Installing $module..."
+          Install-Module -Name $module -Scope CurrentUser -Force -SkipPublisherCheck
+        }
+
+    - name: Validate
+      shell: powershell
+      run: build\vsts-validate.ps1 -TestGeneral $false -TestFunctions $true
+
+  build-and-release:
+    name: Build and Release
+    runs-on: windows-latest
+    needs: [general-unit-tests, public-functions-unit-tests, internal-functions-unit-tests, individual-unit-tests]
+    if: ${{ always() && (needs.general-unit-tests.result == 'success' || needs.general-unit-tests.result == 'skipped') && (needs.public-functions-unit-tests.result == 'success' || needs.public-functions-unit-tests.result == 'skipped') && (needs.internal-functions-unit-tests.result == 'success' || needs.internal-functions-unit-tests.result == 'skipped') && (needs.individual-unit-tests.result == 'success' || needs.individual-unit-tests.result == 'skipped') }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Cache Powershell Modules
+      id: cache-powershell-modules
+      uses: actions/cache@v5
+      with:
+        path: ~\Documents\WindowsPowerShell\Modules
+        key: ps-modules-${{ runner.os }}-v1
+
+    - name: Install Prerequisites
+      if: steps.cache-powershell-modules.outputs.cache-hit != 'true'
+      shell: powershell
+      run: |
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+        Write-Host "Installing Pester (maximum 4.99.99)..."
+        Install-Module Pester -MaximumVersion 4.99.99 -Scope CurrentUser -Force -SkipPublisherCheck
+        $modules = @('PSFramework','PSScriptAnalyzer','Az.Storage','PSOAuthHelper','ImportExcel')
+        foreach ($module in $modules) {
+          Write-Host "Installing $module..."
+          Install-Module -Name $module -Scope CurrentUser -Force -SkipPublisherCheck
+        }
+
+    - name: Build
+      run: .\build\vsts-build.ps1 -ApiKey ${{ secrets.APIKEY }} -AutoVersion:$true -SkipPublish:${{ github.event_name == 'workflow_dispatch' && inputs.skippublish || '$False' }}
+      shell: powershell
+
+    - name: Get version
+      if: ${{ success() && (github.event_name != 'workflow_dispatch' || !inputs.skipghrelease) }}
+      shell: powershell
+      run: |
+        $publishDir = Get-Item -Path publish
+        [version]$version = (Import-PowerShellDataFile -Path "$($publishDir.FullName)\d365fo.tools\d365fo.tools.psd1").ModuleVersion
+        $githubReleaseVersion = "$($version.Major).$($version.Minor).$($version.Build)"
+        "VERSION=$githubReleaseVersion" >> $env:GITHUB_ENV
+
+    - name: Create GitHub release
+      uses: softprops/action-gh-release@v3
+      if: ${{ success() && (github.event_name != 'workflow_dispatch' || !inputs.skipghrelease) }}
+      with:
+        name: ${{ env.VERSION }}
+        tag_name: ${{ env.VERSION }}
+        draft: false
+        prerelease: true
+        generate_release_notes: true
