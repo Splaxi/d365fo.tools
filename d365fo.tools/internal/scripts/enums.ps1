@@ -21,6 +21,7 @@ enum LcsAssetFileType {
     SoftwareDeployablePackage = 10
     GERConfiguration = 12
     DataPackage = 15
+    Backup = 17
     PowerBIReportModel = 19
     ECommercePackage = 26
     NuGetPackage = 27
